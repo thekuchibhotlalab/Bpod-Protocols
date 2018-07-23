@@ -10,6 +10,8 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SoundDuration = 0.1; % duration of sound
     S.GUI.SinWaveFreqGo = 4756; % Frequency of go cue
     S.GUI.SinWaveFreqNoGo = 8000; % Frequency of no-go cue
+    S.GUI.SinWaveFreqGoFalse = 4000;
+    S.GUI.SinWaveFreqNoGoFalse = 9514;
     S.GUIPanels.Sound = {'SinWaveFreqGo', 'SinWaveFreqNoGo', 'SoundDuration'}; % Labels for sound panel
     S.GUI.Amplitude = 0.5;
 end
@@ -24,15 +26,16 @@ S.context(probe1(1):probe1(2)) = 0;% 0 = probe context, licktube out
 randomize = RandStream('mlfg6331_64');
 TrialTypes = []; 
 for i = 1:25 % 25 groups of 20 trials, each 20 trials is balanced
-    TrialTypes(i,:) = datasample(randomize, [1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],20,'Replace',false);
+    TrialTypes(i,:) = datasample(randomize, [1 1 1 1 1 1 1 1 1 3 2 2 2 2 2 2 2 2 2 4],20,'Replace',false);
 end
-% TrialTypes = reshape(TrialTypes, [20, 25]); % array of 500 balanced trials
 TrialTypes = TrialTypes';
 TrialTypes(1:n) = 1; % overwrites first n trials
 TrialTypes(probe1(1):probe1(1)+1) = 1; % first 2 trials of probe are GO
 TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],18,'Replace',false); % balances remaining 18 trials of probe
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
-decibel = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1]; % change this to amplify sound (make sure to calibrate first)
+
+% change this to amplify sound (make sure to calibrate first)
+decibel = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
 Amplitude = [];
 for i = 1:25 
     amp = decibel(i);
@@ -147,9 +150,14 @@ GoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqGo, S.GUI.SoundDuration); % Sam
 NoGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqNoGo, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
 GoFreq = GoFreq*(Amplitude(currentTrial));
 NoGoFreq = NoGoFreq*(Amplitude(currentTrial));
+FalseGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqGoFalse, S.GUI.SoundDuration);
+FalseNoGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqNoGoFalse, S.GUI.SoundDuration);
 disp(Amplitude(currentTrial));
 PsychToolboxSoundServer('Load', 1, GoFreq); % Load specified sound within trial
 PsychToolboxSoundServer('Load', 2, NoGoFreq); % Load specified sound within trial
+PsychToolboxSoundServer('Load', 3, FalseGoFreq); % Load specified sound within trial
+PsychToolboxSoundServer('Load', 4, FalseNoGoFreq); % Load specified sound within trial
+
 S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 R = GetValveTimes(S.GUI.RewardAmount, 1); ValveTime = R;  % Update reward amounts
 switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
@@ -161,6 +169,14 @@ switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
         Stimulus = 2; %NoGoTone
         INResponse = 'Punish';
         NOResponse = 'CorrectReject'; 
+    case 3 % False GO trial
+        Stimulus = 3; % False GoTone
+        INResponse = 'OpenValve';
+        NOResponse = 'Miss';
+    case 4 % False NoGO trial
+        Stimulus = 4; % False NoGoTone
+        INResponse = 'OpenValve';
+        NOResponse = 'Miss';
 end
 if S.context(currentTrial) == 1 % Reinforced context 
     sma = AddState(sma, 'Name', 'PreTrial', ... % Pre trial period ensuring no activity for 2 seconds
@@ -268,4 +284,4 @@ for x = 1:Data.nTrials
         Outcomes(x) = 0; % red X for false alarm
     end
 end
-TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'update',Data.nTrials+1,TrialTypes,Outcomes);  
+TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'update',Data.nTrials+1,TrialTypes,Outcomes);
