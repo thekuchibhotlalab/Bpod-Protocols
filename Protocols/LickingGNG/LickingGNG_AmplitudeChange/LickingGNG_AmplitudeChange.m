@@ -1,4 +1,4 @@
-function LickingGNG
+function LickingGNG_AmplitudeChange
 global BpodSystem
 global probe1
 %% Create trial manager object
@@ -14,7 +14,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.Amplitude = 0.5;
 end
 %% Define trials
-MaxTrials = 500; % max trials
+MaxTrials = 1000; % max trials
 n = 5; % first n trials are GO (Type 1)
 probe1= [101 120]; % Input trials for first probe block
 % probe2 = [3 8]; % Input trials for second probe block
@@ -23,7 +23,7 @@ S.context(probe1(1):probe1(2)) = 0;% 0 = probe context, licktube out
 % S.context(probe2(1):probe2(2)) = 0;% 0 = probe context, licktube out
 randomize = RandStream('mlfg6331_64');
 TrialTypes = []; 
-for i = 1:25 % 25 groups of 20 trials, each 20 trials is balanced
+for i = 1:50 % 25 groups of 20 trials, each 20 trials is balanced
     TrialTypes(i,:) = datasample(randomize, [1 1 1 1 1 1 1 1 1 3 2 2 2 2 2 2 2 2 2 4],20,'Replace',false);
 end
 TrialTypes = TrialTypes';
@@ -35,7 +35,7 @@ BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will b
 % change this to amplify sound (make sure to calibrate first)
 decibel = [1 0.75 0.5 0.25 1 0.75 0.5 0.25 1 0.75 0.5 0.25 1 0.75 0.5 0.25 1 0.75 0.5 0.25 1 0.75 0.5 0.25 1];
 Amplitude = [];
-for i = 1:25 
+for i = 1:50 
     amp = decibel(i);
     amp = repelem(amp,20);
     Amplitude(i,:) = datasample(amp, 20, 'Replace', false); 

@@ -1,4 +1,4 @@
-function LickingGNG
+function LickingGNG_FalseFrequencies
 global BpodSystem
 global probe1
 %% Create trial manager object
@@ -10,42 +10,32 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SoundDuration = 0.1; % duration of sound
     S.GUI.SinWaveFreqGo = 4756; % Frequency of go cue
     S.GUI.SinWaveFreqNoGo = 8000; % Frequency of no-go cue
-    S.GUI.SinWaveFreqGoFalse = 4000;
-    S.GUI.SinWaveFreqNoGoFalse = 9514;
+    S.GUI.SinWaveFreqGoFalse = 5187;
+    S.GUI.SinWaveFreqNoGoFalse = 7336;   
+    S.GUI.SinWaveFreqMiddle = 6169; % 3/8 octave from 4756 (halfway between our go and no-go)
     S.GUIPanels.Sound = {'SinWaveFreqGo', 'SinWaveFreqNoGo', 'SoundDuration'}; % Labels for sound panel
-    S.GUI.Amplitude = 0.5;
 end
 %% Define trials
-MaxTrials = 500; % max trials
+MaxTrials = 1000; % max trials
 n = 5; % first n trials are GO (Type 1)
-probe1= [101 120]; % Input trials for first probe block
+% probe1= [101 120]; % Input trials for first probe block
 % probe2 = [3 8]; % Input trials for second probe block
 S.context = ones(MaxTrials, 1); %1 = reinforced context, licktube in
-S.context(probe1(1):probe1(2)) = 0;% 0 = probe context, licktube out
+% S.context(probe1(1):probe1(2)) = 0;% 0 = probe context, licktube out
 % S.context(probe2(1):probe2(2)) = 0;% 0 = probe context, licktube out
 randomize = RandStream('mlfg6331_64');
 TrialTypes = []; 
-for i = 1:25 % 25 groups of 20 trials, each 20 trials is balanced
-    TrialTypes(i,:) = datasample(randomize, [1 1 1 1 1 1 1 1 1 3 2 2 2 2 2 2 2 2 2 4],20,'Replace',false);
+for i = 1:50 % 25 groups of 20 trials, each 20 trials is balanced
+    TrialTypes(i,:) = datasample(randomize, [1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 3 4 5],20,'Replace',false);
 end
 TrialTypes = TrialTypes';
 TrialTypes(1:n) = 1; % overwrites first n trials
-TrialTypes(probe1(1):probe1(1)+1) = 1; % first 2 trials of probe are GO
-TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],18,'Replace',false); % balances remaining 18 trials of probe
+% TrialTypes(probe1(1):probe1(1)+1) = 1; % first 2 trials of probe are GO
+% TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],18,'Replace',false); % balances remaining 18 trials of probe
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
-
-% change this to amplify sound (make sure to calibrate first)
-decibel = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
-Amplitude = [];
-for i = 1:25 
-    amp = decibel(i);
-    amp = repelem(amp,20);
-    Amplitude(i,:) = datasample(amp, 20, 'Replace', false); 
-end
-Amplitude = Amplitude';
 tic; % starts timer
 %% Initialize plots
-BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [10 750 1900 400],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off'); % Initializes figure for Outcome plot
+BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [10 750 2000 400],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off'); % Initializes figure for Outcome plot
 BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .3 .9 .6]); % Initializes axes for Outcome plot
 % BpodSystem.GUIHandles.ProbeContextLine2 = line((probe2),[-3,-3],'LineStyle','-', 'LineWidth', 10,'Color','b', 'MarkerSize',100); % draws line for probe trials
 TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes) % 'ntrials',MaxTrials); % Initializes Outcome plot
@@ -76,7 +66,7 @@ S.SF = 192000; % Sound card sampling rate
 PsychToolboxSoundServer('init')
 % Set soft code handler to trigger sounds
 BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler_PlaySound';
-sma = PrepareStateMachine(S, TrialTypes, 1, [], Amplitude); % Prepare state machine for trial 1 with empty "current events" variable
+sma = PrepareStateMachine(S, TrialTypes, 1, []); % Prepare state machine for trial 1 with empty "current events" variable
 TrialManager.startTrial(sma); % Sends & starts running first trial's state machine. A MATLAB timer object updates the 
                               % console UI, while code below proceeds in parallel.
 % In this case, we don't need trial events to build the state machine - but
@@ -85,7 +75,7 @@ TrialManager.startTrial(sma); % Sends & starts running first trial's state machi
 for currentTrial = 1:MaxTrials
     currentTrialEvents = TrialManager.getCurrentEvents({'WaitForLick', 'OpenValve'}); % Hangs here until Bpod enters one of the listed trigger states, then returns current trial's states visited + events captured to this point
     if BpodSystem.Status.BeingUsed == 0; return; end % If user hit console "stop" button, end session 
-    [sma, S] = PrepareStateMachine(S, TrialTypes, currentTrial+1, currentTrialEvents, Amplitude); % Prepare next state machine.
+    [sma, S] = PrepareStateMachine(S, TrialTypes, currentTrial+1, currentTrialEvents); % Prepare next state machine.
     % Since PrepareStateMachine is a function with a separate workspace, pass any local variables needed to make 
     % the state machine as fields of settings struct S e.g. S.learningRate = 0.2.
     SendStateMachine(sma, 'RunASAP'); % With TrialManager, you can send the next trial's state machine while the current trial is ongoing
@@ -144,19 +134,20 @@ delete(numMiss);subplot(211);numMiss = text(2,z(2), num2str(miss), 'vert', 'bott
 delete(numCR);subplot(211);numCR = text(3,z(3), num2str(cr), 'vert', 'bottom', 'horiz', 'center');
 delete(numFA);subplot(211);numFA = text(4,z(4), num2str(fa), 'vert', 'bottom', 'horiz', 'center');
 end
-function [sma, S] = PrepareStateMachine(S, TrialTypes, currentTrial, ~, Amplitude)
+function [sma, S] = PrepareStateMachine(S, TrialTypes, currentTrial, ~)
 sma = NewStateMatrix(); % Assemble state matrix
 GoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqGo, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
 NoGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqNoGo, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
-GoFreq = GoFreq*(Amplitude(currentTrial));
-NoGoFreq = NoGoFreq*(Amplitude(currentTrial));
+
 FalseGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqGoFalse, S.GUI.SoundDuration);
 FalseNoGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqNoGoFalse, S.GUI.SoundDuration);
-disp(Amplitude(currentTrial));
+MiddleFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqMiddle, S.GUI.SoundDuration);
+
 PsychToolboxSoundServer('Load', 1, GoFreq); % Load specified sound within trial
 PsychToolboxSoundServer('Load', 2, NoGoFreq); % Load specified sound within trial
 PsychToolboxSoundServer('Load', 3, FalseGoFreq); % Load specified sound within trial
 PsychToolboxSoundServer('Load', 4, FalseNoGoFreq); % Load specified sound within trial
+PsychToolboxSoundServer('Load', 5, FalseNoGoFreq); % Load specified sound within trial
 
 S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 R = GetValveTimes(S.GUI.RewardAmount, 1); ValveTime = R;  % Update reward amounts
@@ -170,13 +161,17 @@ switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
         INResponse = 'Punish';
         NOResponse = 'CorrectReject'; 
     case 3 % False GO trial
-        Stimulus = 3; % False GoTone
-        INResponse = 'OpenValve';
-        NOResponse = 'Miss';
-    case 4 % False NoGO trial
-        Stimulus = 4; % False NoGoTone
-        INResponse = 'OpenValve';
-        NOResponse = 'Miss';
+        Stimulus = 3; % False middle tone
+        INResponse = 'NeutralIn';
+        NOResponse = 'NeutralOut';
+    case 4 % False GO trial
+        Stimulus = 4; % False middle tone
+        INResponse = 'NeutralIn';
+        NOResponse = 'NeutralOut';
+    case 5 % False GO trial
+        Stimulus = 5; % False middle tone
+        INResponse = 'NeutralIn';
+        NOResponse = 'NeutralOut';
 end
 if S.context(currentTrial) == 1 % Reinforced context 
     sma = AddState(sma, 'Name', 'PreTrial', ... % Pre trial period ensuring no activity for 2 seconds
@@ -218,6 +213,14 @@ if S.context(currentTrial) == 1 % Reinforced context
     sma = AddState(sma, 'Name', 'Punish', ... % 7 second punish state
         'Timer', 7,...
         'StateChangeConditions', {'Tup', 'ITI'}, ...
+        'OutputActions', {}); 
+    sma = AddState(sma, 'Name', 'NeutralIn', ... % 2 second time out for miss
+        'Timer', 2,...
+        'StateChangeConditions', {'Tup', 'exit'}, ...
+        'OutputActions', {}); 
+    sma = AddState(sma, 'Name', 'NeutralOut', ... % 2 second time out for miss
+        'Timer', 2,...
+        'StateChangeConditions', {'Tup', 'exit'}, ...
         'OutputActions', {}); 
     sma = AddState(sma, 'Name', 'ITI', ... % Tup Action
         'Timer', 0,...
@@ -280,6 +283,8 @@ for x = 1:Data.nTrials
         Outcomes(x) = 1; % green x for Miss
     elseif TrialTypes(x) == 2 & ~isnan(Data.RawEvents.Trial{x}.States.CorrectReject) % If no-go and correct reject
         Outcomes(x) = 2; % unfilled green circle for Correct Rejects
+    elseif ~isnan(Data.RawEvents.Trial{x}.States.NeutralIn)
+        Outcomes(x) = -1;
     elseif TrialTypes(x) == 2 % no go
         Outcomes(x) = 0; % red X for false alarm
     end
