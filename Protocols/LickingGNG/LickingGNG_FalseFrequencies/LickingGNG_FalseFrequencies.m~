@@ -106,17 +106,9 @@ for currentTrial = 1:MaxTrials
         noGoIn = noGoIn +1; % update num of misses in probe
         z2=[z2(1) z2(2) noGoIn z2(4) z2(5) z2(6)]; % change percentage difference between hit and miss
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
-    elseif TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % go
-        noGoOut = noGoOut +1; % update num of misses in probe
-        z2=[z2(1) z2(2) z2(3) noGoOut z2(5) z2(6)]; % change percentage difference between hit and miss
-        set(ProbeGraph, 'YData', z2); % Update probe performance plot
-    elseif TrialTypes(currentTrial) == 5 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % go
-        middleIn = middleIn +1; % update num of misses in probe
-        z2=[z2(1) z2(2) z2(3) z2(4) middleIn z2(6)]; % change percentage difference between hit and miss
-        set(ProbeGraph, 'YData', z2); % Update probe performance plot
-    elseif TrialTypes(currentTrial) == 5 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % go
-        middleOut = middleOut +1; % update num of misses in probe
-        z2=[z2(1) z2(2) z2(3) z2(4) z2(5) middleOut]; % change percentage difference between hit and miss
+    elseif TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % go
+        noGoIn = noGoIn +1; % update num of misses in probe
+        z2=[z2(1) z2(2) noGoIn z2(4) z2(5) z2(6)]; % change percentage difference between hit and miss
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
     elseif S.context(currentTrial) == 1 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.OpenValve)
         hit = hit +1; % update num of hits
@@ -136,12 +128,10 @@ for currentTrial = 1:MaxTrials
         set(OutcomesGraph, 'YData', z); % Update reinforcement performance plot
     end
 % Update numbers of hit, misses, cr, and false alarms above each bin in performance graphs (deletes previous, updates number in specific plot)    
-delete(numGoIn); subplot(212); numGoIn = text(1:length(c(1)),z2(1),num2str(goIn),'vert','bottom','horiz','center'); 
-delete(numGoOut);subplot(212); numGoOut = text(2,z2(2), num2str(goOut), 'vert', 'bottom', 'horiz', 'center');
-delete(numNoGoIn);subplot(212);numNoGoIn = text(3,z2(3), num2str(noGoIn), 'vert', 'bottom', 'horiz', 'center');
-delete(numNoGoOut);subplot(212);numNoGoOut = text(4,z2(4), num2str(noGoOut), 'vert', 'bottom', 'horiz', 'center');
-delete(numMiddleIn);subplot(212);numMiddleIn = text(5,z2(5), num2str(middleIn), 'vert', 'bottom', 'horiz', 'center');
-delete(numMiddleOut);subplot(212);numMiddleOut = text(6,z2(6), num2str(middleOut), 'vert', 'bottom', 'horiz', 'center');
+delete(numHit2); subplot(212); numHit2 = text(1:length(c(1)),z2(1),num2str(goIn),'vert','bottom','horiz','center'); 
+delete(numMiss2);subplot(212); numMiss2 = text(2,z2(2), num2str(miss2), 'vert', 'bottom', 'horiz', 'center');
+delete(numCR2);subplot(212);numCR2 = text(3,z2(3), num2str(cr2), 'vert', 'bottom', 'horiz', 'center');
+delete(numFA2);subplot(212);numFA2 = text(4,z2(4), num2str(fa2), 'vert', 'bottom', 'horiz', 'center');
 delete(numHit);subplot(211);numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom');
 delete(numMiss);subplot(211);numMiss = text(2,z(2), num2str(miss), 'vert', 'bottom', 'horiz', 'center');
 delete(numCR);subplot(211);numCR = text(3,z(3), num2str(cr), 'vert', 'bottom', 'horiz', 'center');
