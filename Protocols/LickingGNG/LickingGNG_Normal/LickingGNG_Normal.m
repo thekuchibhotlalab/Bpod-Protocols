@@ -1,6 +1,5 @@
 function LickingGNG_Normal
 global BpodSystem
-global probe1
 %% Create trial manager object
 TrialManager = TrialManagerObject;
 %% Define parameters
@@ -16,17 +15,15 @@ end
 MaxTrials = 1000; % max trials
 n = 5; % first n trials are GO (Type 1)
 probe1= [81 100]; % Input trials for first probe block
-% probe2 = [3 8]; % Input trials for second probe block
 S.context = ones(MaxTrials, 1); %1 = reinforced context, licktube in
 S.context(probe1(1):probe1(2)) = 0;% 0 = probe context, licktube out
-% S.context(probe2(1):probe2(2)) = 0;% 0 = probe context, licktube out
-randomize = RandStream('mlfg6331_64');
-TrialTypes = []; 
-for i = 1:50 % 25 groups of 20 trials, each 20 trials is balanced
+randomize = RandStream('mlfg6331_64'); % creates random stream of numbers for data samplign later
+TrialTypes = []; % initalizes empty array for Trialtypes
+for i = 1:50 % 50 groups of 20 trials, each 20 trials is balanced
     TrialTypes(i,:) = datasample(randomize, [1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],20,'Replace',false);
 end
-TrialTypes = TrialTypes';
-TrialTypes(1:n) = 1; % overwrites first n trials
+TrialTypes = TrialTypes'; % transposes array for proper formatting
+TrialTypes(1:n) = 1; % overwrites first n trials with specified trial
 TrialTypes(probe1(1):probe1(1)+1) = 3; % first 2 trials of probe are GO
 TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4],18,'Replace',false); % balances remaining 18 trials of probe
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
@@ -45,18 +42,18 @@ subplot(2,1,1); % graph 1
 hit = 0; miss = 0; cr = 0; fa =0; % initalizes numbers of hits, miss, cr, fa to 0
 z = [0 0 0 0]; % initiates array of graph
 OutcomesGraph = bar(gca,c , z); title('Reinforcement'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % Performance figure
-numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
-numMiss = text(2,z(2), num2str(miss), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
-numCR = text(3,z(3), num2str(cr), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
-numFA = text(4,z(4), num2str(fa), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
+numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1); % initalizes number of hits
+numMiss = text(2,z(2), num2str(miss), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1); % initalizes number of misses
+numCR = text(3,z(3), num2str(cr), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1); % initializes number of correct rejects
+numFA = text(4,z(4), num2str(fa), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);% initializes number of false alarms
 subplot(2, 1, 2); % graph 2
 hit2 = 0; miss2 = 0; cr2 = 0; fa2 =0; % initializes numbers of hits, miss, cr, fa in probe to 0
 z2 = [0 0 0 0]; % initiates array of graph
 ProbeGraph = bar(gca, c, z2); title('Probe'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % performance in probe
-numHit2 = text(1:length(c(1)),z2(1),num2str(hit2),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
-numMiss2 = text(2,z2(2), num2str(miss2), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
-numCR2 = text(3, z2(3),num2str(cr2),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
-numFA2 = text(4,z2(4), num2str(fa2), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
+numHit2 = text(1:length(c(1)),z2(1),num2str(hit2),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initalizes number of hits
+numMiss2 = text(2,z2(2), num2str(miss2), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initalizes number of misses
+numCR2 = text(3, z2(3),num2str(cr2),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes number of correct rejects
+numFA2 = text(4,z2(4), num2str(fa2), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes number of false alarms
 %% Define stimuli and send to sound server
 S.SF = 192000; % Sound card sampling rate
 % Program sound server
@@ -131,7 +128,7 @@ delete(numMiss);subplot(211);numMiss = text(2,z(2), num2str(miss), 'vert', 'bott
 delete(numCR);subplot(211);numCR = text(3,z(3), num2str(cr), 'vert', 'bottom', 'horiz', 'center');
 delete(numFA);subplot(211);numFA = text(4,z(4), num2str(fa), 'vert', 'bottom', 'horiz', 'center');
 end
-function [sma, S] = PrepareStateMachine(S, TrialTypes, currentTrial, ~, Amplitude)
+function [sma, S] = PrepareStateMachine(S, TrialTypes, currentTrial, ~)
 sma = NewStateMatrix(); % Assemble state matrix
 GoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqGo, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
 NoGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqNoGo, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
