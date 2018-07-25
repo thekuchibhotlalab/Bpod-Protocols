@@ -1,8 +1,9 @@
 function LickingGNG_FalseFrequencies
 global BpodSystem
-global probe1
 %% Create trial manager object
 TrialManager = TrialManagerObject;
+%% Octaves by 1/8 spacing for reference
+% 40
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
@@ -10,28 +11,22 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SoundDuration = 0.1; % duration of sound
     S.GUI.SinWaveFreqGo = 4756; % Frequency of go cue
     S.GUI.SinWaveFreqNoGo = 8000; % Frequency of no-go cue
-    S.GUI.SinWaveFreqGoFalse = 5187;
-    S.GUI.SinWaveFreqNoGoFalse = 7336;   
+    S.GUI.SinWaveFreqGoFalse = 5187; % Frequency of no-go cue
+    S.GUI.SinWaveFreqNoGoFalse = 7336; 
     S.GUI.SinWaveFreqMiddle = 6169; % 3/8 octave from 4756 (halfway between our go and no-go)
     S.GUIPanels.Sound = {'SinWaveFreqGo', 'SinWaveFreqNoGo', 'SoundDuration'}; % Labels for sound panel
 end
 %% Define trials
 MaxTrials = 1000; % max trials
 n = 5; % first n trials are GO (Type 1)
-% probe1= [101 120]; % Input trials for first probe block
-% probe2 = [3 8]; % Input trials for second probe block
 S.context = ones(MaxTrials, 1); %1 = reinforced context, licktube in
-% S.context(probe1(1):probe1(2)) = 0;% 0 = probe context, licktube out
-% S.context(probe2(1):probe2(2)) = 0;% 0 = probe context, licktube out
 randomize = RandStream('mlfg6331_64');
 TrialTypes = []; 
-for i = 1:50 % 25 groups of 20 trials, each 20 trials is balanced
-    TrialTypes(i,:) = datasample(randomize, [1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 3 4 5],20,'Replace',false);
+for i = 1:50 % 50 groups of 20 trials, each 20 trials is balanced
+    TrialTypes(i,:) = datasample(randomize, [1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 3 4 5],20,'Replace',false); % numbers specify balanced trial types
 end
-TrialTypes = TrialTypes';
+TrialTypes = TrialTypes'; % transpose array holding trial tyeps
 TrialTypes(1:n) = 1; % overwrites first n trials
-% TrialTypes(probe1(1):probe1(1)+1) = 1; % first 2 trials of probe are GO
-% TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],18,'Replace',false); % balances remaining 18 trials of probe
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 tic; % starts timer
 %% Initialize plots
@@ -48,21 +43,21 @@ subplot(2,1,1); % graph 1
 hit = 0; miss = 0; cr = 0; fa =0; % initalizes numbers of hits, miss, cr, fa to 0
 z = [0 0 0 0]; % initiates array of graph
 OutcomesGraph = bar(gca,c , z); title('Reinforcement'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % Performance figure
-numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
-numMiss = text(2,z(2), num2str(miss), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
-numCR = text(3,z(3), num2str(cr), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
-numFA = text(4,z(4), num2str(fa), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
+numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1); % initializes numbers above bar
+numMiss = text(2,z(2), num2str(miss), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1); % initializes numbers above bar
+numCR = text(3,z(3), num2str(cr), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1); % initializes numbers above bar
+numFA = text(4,z(4), num2str(fa), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1); % initializes numbers above bar
 subplot(2, 1, 2); % graph 2
-goIn = 0; goOut = 0; noGoIn = 0; noGoOut =0; middleIn = 0; middleOut = 0; % initializes numbers of hits, miss, cr, fa in probe to 0
+goIn = 0; goOut = 0; noGoIn = 0; noGoOut =0; middleIn = 0; middleOut = 0; % initializes numbers of ins and outs for false go, nogo and middle tones
 z2 = [0 0 0 0 0 0]; % initiates array of graph
 b = categorical({'GO-In','Go-Out','NoGo-In', 'NoGo-Out', 'MiddleIn', 'MiddleOut'}); c = reordercats(b, {'GO-In','Go-Out','NoGo-In', 'NoGo-Out', 'MiddleIn', 'MiddleOut'}); % set x-axis
 ProbeGraph = bar(gca, c, z2); title('Probe'); xlabel('Outcome'); ylabel('Responses'); ylim([0 110]); % performance in probe
-numGoIn= text(1:length(c(1)),z2(1),num2str(goIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
-numGoOut = text(2,z2(2), num2str(goOut), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
-numNoGoIn = text(3, z2(3),num2str(noGoIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
-numNoGoOut = text(4,z2(4), num2str(noGoOut), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
-numMiddleIn = text(5, z2(5), num2str(middleIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
-numMiddleOut = text(6, z2(6), num2str(middleOut),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
+numGoIn= text(1:length(c(1)),z2(1),num2str(goIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
+numGoOut = text(2,z2(2), num2str(goOut), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
+numNoGoIn = text(3, z2(3),num2str(noGoIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
+numNoGoOut = text(4,z2(4), num2str(noGoOut), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
+numMiddleIn = text(5, z2(5), num2str(middleIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
+numMiddleOut = text(6, z2(6), num2str(middleOut),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
 %% Define stimuli and send to sound server
 S.SF = 192000; % Sound card sampling rate
 % Program sound server
@@ -94,21 +89,29 @@ for currentTrial = 1:MaxTrials
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file
     end  
     % Updates performance graphs
-    if TrialTypes(currentTrial) == 3 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % hit
-        goIn = goIn+1; % updates number of hits in probe
-        z2=[goIn z2(2) z2(3) z2(4) z2(5) z2(6)]; % change percentage difference between hit and miss
+    if TrialTypes(currentTrial) == 3 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % FalseGoTone and In
+        goIn = goIn+1; % updates number of Ins in probe for False go tone
+        z2=[goIn z2(2) z2(3) z2(4) z2(5) z2(6)]; % adds updated number to  specifiedbar
         set(ProbeGraph, 'YData', z2); % Updates probe performance plot
-    elseif TrialTypes(currentTrial) == 3 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % go
-        goOut = goOut +1; % update num of misses in probe
-        z2=[z2(1) goOut z2(3) z2(4) z2(5) z2(6)]; % change percentage difference between hit and miss
+    elseif TrialTypes(currentTrial) == 3 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % FalseGoTone and Out
+        goOut = goOut +1; % update num of outs in probe for false go tone
+        z2=[z2(1) goOut z2(3) z2(4) z2(5) z2(6)]; % adds updated number to specified bar
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
-    elseif TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % go
-        noGoIn = noGoIn +1; % update num of misses in probe
-        z2=[z2(1) z2(2) noGoIn z2(4) z2(5) z2(6)]; % change percentage difference between hit and miss
+    elseif TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % FalseNoGoTone and In
+        noGoIn = noGoIn +1; % update num of Ins in probe for false nogo tone
+        z2=[z2(1) z2(2) noGoIn z2(4) z2(5) z2(6)]; % adds updated number to specified bar
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
-    elseif TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % go
-        noGoIn = noGoIn +1; % update num of misses in probe
-        z2=[z2(1) z2(2) noGoIn z2(4) z2(5) z2(6)]; % change percentage difference between hit and miss
+    elseif TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % FalseNoGoTone and Out
+        noGoOut = noGoOut +1; % update num of outs in probe for false no go tone
+        z2=[z2(1) z2(2) z2(3) noGoOut z2(5) z2(6)]; % adds updated number to specified bar
+        set(ProbeGraph, 'YData', z2); % Update probe performance plot
+    elseif TrialTypes(currentTrial) == 5 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % MiddleTone and In
+        middleIn = middleIn +1; % update num of  ins in probe for middle tone
+        z2=[z2(1) z2(2) z2(3) z2(4) middleIn z2(6)]; % adds updated number to specified bar
+        set(ProbeGraph, 'YData', z2); % Update probe performance plot
+    elseif TrialTypes(currentTrial) == 5 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % MiddleTone and Out
+        middleOut = middleOut +1; % update num of outs in probe for middle tone
+        z2=[z2(1) z2(2) z2(3) z2(4) z2(5) middleOut]; % adds updated number to specified bar
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
     elseif S.context(currentTrial) == 1 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.OpenValve)
         hit = hit +1; % update num of hits
@@ -128,10 +131,13 @@ for currentTrial = 1:MaxTrials
         set(OutcomesGraph, 'YData', z); % Update reinforcement performance plot
     end
 % Update numbers of hit, misses, cr, and false alarms above each bin in performance graphs (deletes previous, updates number in specific plot)    
-delete(numHit2); subplot(212); numHit2 = text(1:length(c(1)),z2(1),num2str(goIn),'vert','bottom','horiz','center'); 
-delete(numMiss2);subplot(212); numMiss2 = text(2,z2(2), num2str(miss2), 'vert', 'bottom', 'horiz', 'center');
-delete(numCR2);subplot(212);numCR2 = text(3,z2(3), num2str(cr2), 'vert', 'bottom', 'horiz', 'center');
-delete(numFA2);subplot(212);numFA2 = text(4,z2(4), num2str(fa2), 'vert', 'bottom', 'horiz', 'center');
+% Also updates numbers of Ins and outs per every frequency change above each bin in probe graph (deletes previous, updates number in specific plot)    
+delete(numGoIn); subplot(212); numGoIn = text(1:length(c(1)),z2(1),num2str(goIn),'vert','bottom','horiz','center'); 
+delete(numGoOut);subplot(212); numGoOut = text(2,z2(2), num2str(goOut), 'vert', 'bottom', 'horiz', 'center');
+delete(numNoGoIn);subplot(212);numNoGoIn = text(3,z2(3), num2str(noGoIn), 'vert', 'bottom', 'horiz', 'center');
+delete(numNoGoOut);subplot(212);numNoGoOut = text(4,z2(4), num2str(noGoOut), 'vert', 'bottom', 'horiz', 'center');
+delete(numMiddleIn);subplot(212);numMiddleIn = text(5,z2(5), num2str(middleIn), 'vert', 'bottom', 'horiz', 'center');
+delete(numMiddleOut);subplot(212);numMiddleOut = text(6,z2(6), num2str(middleOut), 'vert', 'bottom', 'horiz', 'center');
 delete(numHit);subplot(211);numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom');
 delete(numMiss);subplot(211);numMiss = text(2,z(2), num2str(miss), 'vert', 'bottom', 'horiz', 'center');
 delete(numCR);subplot(211);numCR = text(3,z(3), num2str(cr), 'vert', 'bottom', 'horiz', 'center');
@@ -142,15 +148,15 @@ sma = NewStateMatrix(); % Assemble state matrix
 GoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqGo, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
 NoGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqNoGo, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
 
-FalseGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqGoFalse, S.GUI.SoundDuration);
-FalseNoGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqNoGoFalse, S.GUI.SoundDuration);
-MiddleFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqMiddle, S.GUI.SoundDuration);
+FalseGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqGoFalse, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
+FalseNoGoFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqNoGoFalse, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
+MiddleFreq = GenerateSineWave(S.SF, S.GUI.SinWaveFreqMiddle, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
 
 PsychToolboxSoundServer('Load', 1, GoFreq); % Load specified sound within trial
 PsychToolboxSoundServer('Load', 2, NoGoFreq); % Load specified sound within trial
 PsychToolboxSoundServer('Load', 3, FalseGoFreq); % Load specified sound within trial
 PsychToolboxSoundServer('Load', 4, FalseNoGoFreq); % Load specified sound within trial
-PsychToolboxSoundServer('Load', 5, FalseNoGoFreq); % Load specified sound within trial
+PsychToolboxSoundServer('Load', 5, MiddleFreq); % Load specified sound within trial
 
 S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 R = GetValveTimes(S.GUI.RewardAmount, 1); ValveTime = R;  % Update reward amounts
@@ -164,17 +170,17 @@ switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
         INResponse = 'Punish';
         NOResponse = 'CorrectReject'; 
     case 3 % False GO trial
-        Stimulus = 3; % False middle tone
-        INResponse = 'NeutralIn';
-        NOResponse = 'NeutralOut';
-    case 4 % False GO trial
-        Stimulus = 4; % False middle tone
-        INResponse = 'NeutralIn';
-        NOResponse = 'NeutralOut';
-    case 5 % False GO trial
+        Stimulus = 3; % False Go tone
+        INResponse = 'NeutralIn'; % State that records the mouse licked
+        NOResponse = 'NeutralOut'; % state that records the mouse withheld licking
+    case 4 % False NOGO trial
+        Stimulus = 4; % False NoGo tone
+        INResponse = 'NeutralIn'; % State that records the mouse licked
+        NOResponse = 'NeutralOut'; % state that records the mouse withheld licking
+    case 5 % False Middle trial
         Stimulus = 5; % False middle tone
-        INResponse = 'NeutralIn';
-        NOResponse = 'NeutralOut';
+        INResponse = 'NeutralIn'; % State that records the mouse licked
+        NOResponse = 'NeutralOut'; % state that records the mouse withheld licking
 end
 if S.context(currentTrial) == 1 % Reinforced context 
     sma = AddState(sma, 'Name', 'PreTrial', ... % Pre trial period ensuring no activity for 2 seconds
