@@ -1,4 +1,4 @@
-function LeverTraining
+function LeverTraining_Normal
 global BpodSystem
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
@@ -6,11 +6,11 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.RewardAmount = 5.2; % ul
 end
 % Initialize performance graph
-figure('Name','Lick Tracker','NumberTitle','off', 'Position', [10 500 500 600]); % open appropriate figure
+lick = figure('Name','Lick Tracker','NumberTitle','off', 'Position', [10 500 500 600]); % open appropriate figure
 b = categorical({'Hits','Miss', 'FA'}); c = reordercats(b, {'Hits', 'Miss', 'FA'}); % set x-axis
 hit = 0; miss = 0; fa =0; % initalizes numbers of hits, miss, cr, fa to 0
 z = [0 0 0];
-LickGraph = bar(gca,c , z); title('Lick Tracker'); xlabel('Outcome'); ylabel('Number of Licks'); ylim([0 150]); yticks(0:10:150) % Performance figure
+LickGraph = bar(gca,c , z); title('Lick Tracker'); xlabel('Outcome'); ylabel('Number of Licks'); ylim([0 800]); yticks(0:50:800) % Performance figure
 numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom');
 numMiss = text(2,z(2), num2str(miss), 'HorizontalAlignment','center','VerticalAlignment','bottom');
 numFA = text(3,z(3), num2str(fa), 'HorizontalAlignment','center','VerticalAlignment','bottom');
@@ -37,7 +37,7 @@ for currentTrial = 1:MaxTrials
         'StateChangeConditions', {'Port2Out', 'OpenValve', 'SoftCode1', 'ManualDelivery', 'Condition1', 'StopForLick'},... % lever press opens valve OR button press leads to manual delivery
         'OutputActions', {}); 
     sma = AddState(sma, 'Name', 'StopForLick', ... % Stop period to assure no activity during wait for press
-        'Timer', StopForLick(currentTrial), ...
+        'Timer', 0.5, ...
         'StateChangeConditions', {'Tup', 'exit'}, ...
         'OutputActions', {});
     sma = AddState(sma, 'Name', 'OpenValve', ... % water delivery
@@ -83,18 +83,18 @@ for currentTrial = 1:MaxTrials
         fa = fa+1; % updates number of hits in probe
         z=[z(1) z(2) fa]; % change percentage difference between hit and miss
         set(LickGraph, 'YData', z); % Updates probe performance plot  
-        delete(numFA); numFA = text(3,z(3), num2str(fa), 'vert', 'bottom', 'horiz', 'center');
+        figure(lick); delete(numFA); numFA = text(3,z(3), num2str(fa), 'vert', 'bottom', 'horiz', 'center');
     elseif ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Drinking) % hit
         hit = hit+1; % updates number of hits in probe
         z=[hit z(2) z(3)]; % change percentage difference between hit and miss
         set(LickGraph, 'YData', z); % Updates probe performance plot
-        delete(numHit);numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom');
+        figure(lick); delete(numHit);numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom');
     elseif ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Miss) % hit
         miss = miss+1; % updates number of hits in probe
         z=[z(1) miss z(3)]; % change percentage difference between hit and miss
         set(LickGraph, 'YData', z); % Updates probe performance plot  
-        delete(numMiss);numMiss = text(2,z(2), num2str(miss), 'vert', 'bottom', 'horiz', 'center');
+        figure(lick); delete(numMiss);numMiss = text(2,z(2), num2str(miss), 'vert', 'bottom', 'horiz', 'center');
     end
-    disp(fa); disp(miss); disp(hit);
+    
 end
 end

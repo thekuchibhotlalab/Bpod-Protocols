@@ -6,7 +6,7 @@ TrialManager = TrialManagerObject;
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-    S.GUI.RewardAmount = 5; % ul
+    S.GUI.RewardAmount = 5.3; % ul
     S.GUI.SoundDuration = 0.1; % seconds
     S.GUI.ResponseTime = 3; % time allowed to respond
     S.GUI.SinWaveFreqGo = 4756; % Frequency of go cue
@@ -15,11 +15,11 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
 end
 %% Define trials
 MaxTrials = 500; 
-n = 5; % first n trials are GO (Type 1)
-probe1= [81 100];
+n = 30; % first n trials are GO (Type 1)
+% probe1= [81 100];
 % probe2 = [81 100];
 S.context = ones(MaxTrials, 1); %1 = reinforced context, licktube in
-S.context(probe1(1):probe1(2)) = 0; % 0 = probe context, licktube out
+% S.context(probe1(1):probe1(2)) = 0; % 0 = probe context, licktube out
 % S.context(probe2(1):probe2(2)) = 0; % probe trials
 randomize = RandStream('mlfg6331_64');
 TrialTypes = []; 
@@ -29,8 +29,8 @@ end
 % TrialTypes = reshape(TrialTypes, [20, 25]); % array of 500 balanced trials
 TrialTypes = TrialTypes';
 TrialTypes(1:n) = 1; % overwrites first n trials
-TrialTypes(probe1(1):probe1(1)+1) = 1; % first 2 trials of probe are GO
-TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],18,'Replace',false); % balances remaining 18 trials of probe
+% TrialTypes(probe1(1):probe1(1)+1) = 1; % first 2 trials of probe are GO
+% TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],18,'Replace',false); % balances remaining 18 trials of probe
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 tic; % starts timer
 
@@ -222,7 +222,7 @@ if S.context(currentTrial) == 1 % Reinforced context
     sma = AddState(sma, 'Name', 'PreTrial', ... % PreTrial period, ensuring no action until next trial begins
         'Timer', 2, ...
         'StateChangeConditions', {'Tup', 'Stimulus', 'Port2Out', 'StopForLever', 'Port1In', 'StopForLick'}, ... % if no action, stimulus activated; if action, stop period
-        'OutputActions', {'PWM2', 255});            
+        'OutputActions', {});            
     sma = AddState(sma, 'Name', 'StopForLever', ... % Stop period to assure no activity during Pre-Trial
         'Timer', 0, ...
         'StateChangeConditions', {'Condition1', 'PreTrial'}, ...
