@@ -3,7 +3,7 @@ global BpodSystem
 %% Create trial manager object
 TrialManager = TrialManagerObject;
 %% Octaves by 1/8 spacing for reference
-% 40
+% [4000, 4362, 4756, 5187, 5657, 6169, 6727, 7336, 8000, 8724, 9514]
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
@@ -20,8 +20,8 @@ end
 MaxTrials = 1000; % max trials
 n = 5; % first n trials are GO (Type 1)
 S.context = ones(MaxTrials, 1); %1 = reinforced context, licktube in
-randomize = RandStream('mlfg6331_64');
-TrialTypes = []; 
+randomize = RandStream('mlfg6331_64'); % randomize stream of numbers for sampling later
+TrialTypes = []; % initalize empty array for trial types
 for i = 1:50 % 50 groups of 20 trials, each 20 trials is balanced
     TrialTypes(i,:) = datasample(randomize, [1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 3 4 5],20,'Replace',false); % numbers specify balanced trial types
 end
@@ -51,7 +51,7 @@ subplot(2, 1, 2); % graph 2
 goIn = 0; goOut = 0; noGoIn = 0; noGoOut =0; middleIn = 0; middleOut = 0; % initializes numbers of ins and outs for false go, nogo and middle tones
 z2 = [0 0 0 0 0 0]; % initiates array of graph
 b = categorical({'GO-In','Go-Out','NoGo-In', 'NoGo-Out', 'MiddleIn', 'MiddleOut'}); c = reordercats(b, {'GO-In','Go-Out','NoGo-In', 'NoGo-Out', 'MiddleIn', 'MiddleOut'}); % set x-axis
-ProbeGraph = bar(gca, c, z2); title('Probe'); xlabel('Outcome'); ylabel('Responses'); ylim([0 110]); % performance in probe
+ProbeGraph = bar(gca, c, z2); title('Probe'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % performance in probe
 numGoIn= text(1:length(c(1)),z2(1),num2str(goIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
 numGoOut = text(2,z2(2), num2str(goOut), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
 numNoGoIn = text(3, z2(3),num2str(noGoIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
@@ -85,33 +85,33 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.TrialTypes(currentTrial) = TrialTypes(currentTrial); % Adds the trial type of the current trial to data
-        UpdateOutcomePlot(TrialTypes, BpodSystem.Data);
+        UpdateOutcomePlot(TrialTypes, BpodSystem.Data); % Updates tracker plot
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file
     end  
     % Updates performance graphs
     if TrialTypes(currentTrial) == 3 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % FalseGoTone and In
         goIn = goIn+1; % updates number of Ins in probe for False go tone
-        z2=[goIn z2(2) z2(3) z2(4) z2(5) z2(6)]; % adds updated number to  specifiedbar
+        z2=[((goIn/(goIn+ goOut))*100) ((goOut/(goIn+goOut))*100) z2(3) z2(4) z2(5) z2(6)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Updates probe performance plot
     elseif TrialTypes(currentTrial) == 3 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % FalseGoTone and Out
         goOut = goOut +1; % update num of outs in probe for false go tone
-        z2=[z2(1) goOut z2(3) z2(4) z2(5) z2(6)]; % adds updated number to specified bar
+        z2=[((goIn/(goIn+ goOut))*100) ((goOut/(goIn+goOut))*100) z2(3) z2(4) z2(5) z2(6)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
     elseif TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % FalseNoGoTone and In
         noGoIn = noGoIn +1; % update num of Ins in probe for false nogo tone
-        z2=[z2(1) z2(2) noGoIn z2(4) z2(5) z2(6)]; % adds updated number to specified bar
+        z2=[z2(1) z2(2) ((noGoIn/(noGoIn+noGoOut))*100) ((noGoOut/(noGoIn+noGoOut))*100) z2(5) z2(6)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
     elseif TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % FalseNoGoTone and Out
         noGoOut = noGoOut +1; % update num of outs in probe for false no go tone
-        z2=[z2(1) z2(2) z2(3) noGoOut z2(5) z2(6)]; % adds updated number to specified bar
+        z2=[z2(1) z2(2) ((noGoIn/(noGoIn+noGoOut))*100) ((noGoOut/(noGoIn+noGoOut))*100) z2(5) z2(6)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
     elseif TrialTypes(currentTrial) == 5 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % MiddleTone and In
         middleIn = middleIn +1; % update num of  ins in probe for middle tone
-        z2=[z2(1) z2(2) z2(3) z2(4) middleIn z2(6)]; % adds updated number to specified bar
+        z2=[z2(1) z2(2) z2(3) z2(4) ((middleIn/(middleIn+middleOut))*100) ((middleOut/(middleIn+middleOut))*100)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
     elseif TrialTypes(currentTrial) == 5 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % MiddleTone and Out
         middleOut = middleOut +1; % update num of outs in probe for middle tone
-        z2=[z2(1) z2(2) z2(3) z2(4) z2(5) middleOut]; % adds updated number to specified bar
+        z2=[z2(1) z2(2) z2(3) z2(4) ((middleIn/(middleIn+middleOut))*100) ((middleOut/(middleIn+middleOut))*100)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
     elseif S.context(currentTrial) == 1 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.OpenValve)
         hit = hit +1; % update num of hits

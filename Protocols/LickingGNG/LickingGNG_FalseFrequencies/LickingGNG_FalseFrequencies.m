@@ -19,7 +19,6 @@ end
 %% Define trials
 MaxTrials = 1000; % max trials
 n = 5; % first n trials are GO (Type 1)
-S.context = ones(MaxTrials, 1); %1 = reinforced context, licktube in
 randomize = RandStream('mlfg6331_64'); % randomize stream of numbers for sampling later
 TrialTypes = []; % initalize empty array for trial types
 for i = 1:50 % 50 groups of 20 trials, each 20 trials is balanced
@@ -32,7 +31,6 @@ tic; % starts timer
 %% Initialize plots
 BpodSystem.ProtocolFigures.OutcomePlotFig = figure('Position', [10 750 2000 400],'name','Outcome plot','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off'); % Initializes figure for Outcome plot
 BpodSystem.GUIHandles.OutcomePlot = axes('Position', [.075 .3 .9 .6]); % Initializes axes for Outcome plot
-% BpodSystem.GUIHandles.ProbeContextLine2 = line((probe2),[-3,-3],'LineStyle','-', 'LineWidth', 10,'Color','b', 'MarkerSize',100); % draws line for probe trials
 TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'init',TrialTypes) % 'ntrials',MaxTrials); % Initializes Outcome plot
 % GUI plugin displays the settings from the "GUI" subfield of a settings struct.
 BpodParameterGUI('init', S); % Initialize parameter GUI plugin--Creates a user interface for viewing and manual override
@@ -51,7 +49,7 @@ subplot(2, 1, 2); % graph 2
 goIn = 0; goOut = 0; noGoIn = 0; noGoOut =0; middleIn = 0; middleOut = 0; % initializes numbers of ins and outs for false go, nogo and middle tones
 z2 = [0 0 0 0 0 0]; % initiates array of graph
 b = categorical({'GO-In','Go-Out','NoGo-In', 'NoGo-Out', 'MiddleIn', 'MiddleOut'}); c = reordercats(b, {'GO-In','Go-Out','NoGo-In', 'NoGo-Out', 'MiddleIn', 'MiddleOut'}); % set x-axis
-ProbeGraph = bar(gca, c, z2); title('Probe'); xlabel('Outcome'); ylabel('Responses'); ylim([0 110]); % performance in probe
+ProbeGraph = bar(gca, c, z2); title('Probe'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % performance in probe
 numGoIn= text(1:length(c(1)),z2(1),num2str(goIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
 numGoOut = text(2,z2(2), num2str(goOut), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
 numNoGoIn = text(3, z2(3),num2str(noGoIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
@@ -91,41 +89,41 @@ for currentTrial = 1:MaxTrials
     % Updates performance graphs
     if TrialTypes(currentTrial) == 3 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % FalseGoTone and In
         goIn = goIn+1; % updates number of Ins in probe for False go tone
-        z2=[goIn z2(2) z2(3) z2(4) z2(5) z2(6)]; % adds updated number to  specifiedbar
+        z2=[((goIn/(goIn+ goOut))*100) ((goOut/(goIn+goOut))*100) z2(3) z2(4) z2(5) z2(6)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Updates probe performance plot
     elseif TrialTypes(currentTrial) == 3 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % FalseGoTone and Out
         goOut = goOut +1; % update num of outs in probe for false go tone
-        z2=[z2(1) goOut z2(3) z2(4) z2(5) z2(6)]; % adds updated number to specified bar
+        z2=[((goIn/(goIn+ goOut))*100) ((goOut/(goIn+goOut))*100) z2(3) z2(4) z2(5) z2(6)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
     elseif TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % FalseNoGoTone and In
         noGoIn = noGoIn +1; % update num of Ins in probe for false nogo tone
-        z2=[z2(1) z2(2) noGoIn z2(4) z2(5) z2(6)]; % adds updated number to specified bar
+        z2=[z2(1) z2(2) ((noGoIn/(noGoIn+noGoOut))*100) ((noGoOut/(noGoIn+noGoOut))*100) z2(5) z2(6)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
     elseif TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % FalseNoGoTone and Out
         noGoOut = noGoOut +1; % update num of outs in probe for false no go tone
-        z2=[z2(1) z2(2) z2(3) noGoOut z2(5) z2(6)]; % adds updated number to specified bar
+        z2=[z2(1) z2(2) ((noGoIn/(noGoIn+noGoOut))*100) ((noGoOut/(noGoIn+noGoOut))*100) z2(5) z2(6)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
     elseif TrialTypes(currentTrial) == 5 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralIn) % MiddleTone and In
         middleIn = middleIn +1; % update num of  ins in probe for middle tone
-        z2=[z2(1) z2(2) z2(3) z2(4) middleIn z2(6)]; % adds updated number to specified bar
+        z2=[z2(1) z2(2) z2(3) z2(4) ((middleIn/(middleIn+middleOut))*100) ((middleOut/(middleIn+middleOut))*100)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
     elseif TrialTypes(currentTrial) == 5 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NeutralOut) % MiddleTone and Out
         middleOut = middleOut +1; % update num of outs in probe for middle tone
-        z2=[z2(1) z2(2) z2(3) z2(4) z2(5) middleOut]; % adds updated number to specified bar
+        z2=[z2(1) z2(2) z2(3) z2(4) ((middleIn/(middleIn+middleOut))*100) ((middleOut/(middleIn+middleOut))*100)]; % updates percentage difference between Ins and Outs
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
-    elseif S.context(currentTrial) == 1 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.OpenValve)
+    elseif  ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.OpenValve)
         hit = hit +1; % update num of hits
         z=[((hit/(hit+miss))*100) ((miss/(hit+miss))*100) z(3) z(4)]; % change percentage difference between hit and miss
         set(OutcomesGraph, 'YData', z); % Update reinforcement performance plot
-    elseif S.context(currentTrial) == 1 & TrialTypes(currentTrial) == 1 % go
+    elseif TrialTypes(currentTrial) == 1 % go
         miss = miss +1; % update num of misses
         z=[((hit/(hit+miss))*100) ((miss/(hit+miss))*100) z(3) z(4)]; % change percentage difference between hit and miss
         set(OutcomesGraph, 'YData', z); % Update reinforcement performance plot
-    elseif S.context(currentTrial) == 1 & TrialTypes(currentTrial) == 2 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.CorrectReject) % If no-go and correct reject
+    elseif TrialTypes(currentTrial) == 2 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.CorrectReject) % If no-go and correct reject
         cr = cr +1; % update num of correct rejects
         z = [z(1) z(2) ((cr/(cr+fa))*100) ((fa/(fa+cr))*100)]; % change percentage difference between false alarm and correct rejects
         set(OutcomesGraph, 'YData', z); % Update reinforcement performance plot
-    elseif S.context(currentTrial) == 1 & TrialTypes(currentTrial) == 2 % no go
+    elseif TrialTypes(currentTrial) == 2 % no go
         fa = fa+1; % update num of false alarms
         z = [z(1) z(2) ((cr/(cr+fa))*100) ((fa/(fa+cr))*100)]; % change percentage difference between false alarm and correct rejects
         set(OutcomesGraph, 'YData', z); % Update reinforcement performance plot
@@ -182,105 +180,58 @@ switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
         INResponse = 'NeutralIn'; % State that records the mouse licked
         NOResponse = 'NeutralOut'; % state that records the mouse withheld licking
 end
-if S.context(currentTrial) == 1 % Reinforced context 
-    sma = AddState(sma, 'Name', 'PreTrial', ... % Pre trial period ensuring no activity for 2 seconds
-        'Timer', 2, ...
-        'StateChangeConditions', {'Tup', 'Stimulus', 'Port1In', 'Stop'}, ... % if no action, stimulus activated; if action, stop period
-        'OutputActions', {}); 
-    sma = AddState(sma, 'Name', 'Stop', ... % Stop period to assure no activity during Pre-Trial
-        'Timer', 0, ...
-        'StateChangeConditions', {'Tup', 'PreTrial'}, ... % returns to PreTrial
-        'OutputActions', {}); 
-    sma = AddState(sma, 'Name', 'Stimulus', ... % Tone
-        'Timer', S.GUI.SoundDuration, ...
-        'StateChangeConditions', {'Tup', 'Dead'}, ...
-        'OutputActions', {'SoftCode', Stimulus});  
-    sma = AddState(sma, 'Name', 'Dead', ... % 100ms dead period
-        'Timer', .1, ...
-        'StateChangeConditions', {'Tup', 'WaitForLick'}, ...
-        'OutputActions', {}); 
-    sma = AddState(sma, 'Name', 'WaitForLick', ... % Response period
-        'Timer', 2, ... 
-        'StateChangeConditions', {'Port1In', INResponse, 'Tup', NOResponse},... % If lick, then open valve to reward. If no lick, miss period
-        'OutputActions', {}); 
-    sma = AddState(sma, 'Name', 'OpenValve', ... % Open valve for reward
-        'Timer', ValveTime,...
-        'StateChangeConditions', {'Tup', 'Drinking'},...
-        'OutputActions', {'ValveState', 1}); 
-    sma = AddState(sma, 'Name', 'Drinking', ... % 4 seconds for drinking
-        'Timer', 4,...
-        'StateChangeConditions', {'Tup', 'ITI'},...
-        'OutputActions', {}); 
-    sma = AddState(sma, 'Name', 'Miss', ... % 2 second time out for miss
-        'Timer', 2,...
-        'StateChangeConditions', {'Tup', 'exit'}, ...
-        'OutputActions', {}); 
-    sma = AddState(sma, 'Name', 'CorrectReject', ... % 2 second correct reject state
-        'Timer', 2,...
-        'StateChangeConditions', {'Tup', 'ITI'}, ...
-        'OutputActions', {}); 
-    sma = AddState(sma, 'Name', 'Punish', ... % 7 second punish state
-        'Timer', 7,...
-        'StateChangeConditions', {'Tup', 'ITI'}, ...
-        'OutputActions', {}); 
-    sma = AddState(sma, 'Name', 'NeutralIn', ... % 2 second time out for miss
-        'Timer', 2,...
-        'StateChangeConditions', {'Tup', 'exit'}, ...
-        'OutputActions', {}); 
-    sma = AddState(sma, 'Name', 'NeutralOut', ... % 2 second time out for miss
-        'Timer', 2,...
-        'StateChangeConditions', {'Tup', 'exit'}, ...
-        'OutputActions', {}); 
-    sma = AddState(sma, 'Name', 'ITI', ... % Tup Action
-        'Timer', 0,...
-        'StateChangeConditions', {'Tup', 'exit'},... % exits trial
-        'OutputActions', {}); 
-else % Probe context
-    sma = AddState(sma, 'Name', 'PreTrial', ... % Pre trial period ensuring no activity for 2 seconds
-        'Timer', 2, ...
-        'StateChangeConditions', {'Tup', 'Stimulus', 'Port1In', 'Stop'}, ... % if no action, stimulus activated; if action, stop period
-        'OutputActions', {'ValveState', 2}); % Keeps lick tube out
-    sma = AddState(sma, 'Name', 'Stop', ... % Stop period to assure no activity during Pre-Trial
-        'Timer', 0, ...
-        'StateChangeConditions', {'Tup', 'PreTrial'}, ... % returns to PreTrial
-        'OutputActions', {'ValveState', 2}); % Keeps lick tube out
-    sma = AddState(sma, 'Name', 'Stimulus', ... % Tone
-        'Timer', S.GUI.SoundDuration, ...
-        'StateChangeConditions', {'Tup', 'Dead'}, ...
-        'OutputActions', {'SoftCode', Stimulus, 'ValveState', 2}); % Keeps lick tube out 
-    sma = AddState(sma, 'Name', 'Dead', ... % 100ms dead period
-        'Timer', .1, ...
-        'StateChangeConditions', {'Tup', 'WaitForLick'}, ...
-        'OutputActions', {'ValveState', 2}); % Keeps lick tube out
-    sma = AddState(sma, 'Name', 'WaitForLick', ... % Response period
-        'Timer', 2, ... 
-        'StateChangeConditions', {'Port1In', INResponse, 'Tup', NOResponse},... % If lick, then open valve to reward. If no lick, miss period
-        'OutputActions', {'ValveState', 2}); % Keeps lick tube out
-    sma = AddState(sma, 'Name', 'OpenValve', ... % Open valve for reward
-        'Timer', ValveTime,...
-        'StateChangeConditions', {'Tup', 'Drinking'},...
-        'OutputActions', {'ValveState', 2}); % Keeps lick tube out
-    sma = AddState(sma, 'Name', 'Drinking', ... % 4 seconds for drinking
-        'Timer', 4,...
-        'StateChangeConditions', {'Tup', 'ITI'},...
-        'OutputActions', {'ValveState', 2}); % Keeps lick tube out
-    sma = AddState(sma, 'Name', 'Miss', ... % 2 second time out for miss
-        'Timer', 2,...
-        'StateChangeConditions', {'Tup', 'exit'}, ...
-        'OutputActions', {'ValveState', 2}); % Keeps lick tube out
-    sma = AddState(sma, 'Name', 'CorrectReject', ... % 2 second correct reject state
-        'Timer', 2,...
-        'StateChangeConditions', {'Tup', 'ITI'}, ...
-        'OutputActions', {'ValveState', 2}); % Keeps lick tube out
-    sma = AddState(sma, 'Name', 'Punish', ... % 7 second punish state
-        'Timer', 7,...
-        'StateChangeConditions', {'Tup', 'ITI'}, ...
-        'OutputActions', {'ValveState', 2}); % Keeps lick tube out
-    sma = AddState(sma, 'Name', 'ITI', ... % Tup Action
-        'Timer', 0,...
-        'StateChangeConditions', {'Tup', 'exit'},... % exits trial
-        'OutputActions', {'ValveState', 2}); % Keeps lick tube out
-end
+sma = AddState(sma, 'Name', 'PreTrial', ... % Pre trial period ensuring no activity for 2 seconds
+    'Timer', 2, ...
+    'StateChangeConditions', {'Tup', 'Stimulus', 'Port1In', 'Stop'}, ... % if no action, stimulus activated; if action, stop period
+    'OutputActions', {}); 
+sma = AddState(sma, 'Name', 'Stop', ... % Stop period to assure no activity during Pre-Trial
+    'Timer', 0, ...
+    'StateChangeConditions', {'Tup', 'PreTrial'}, ... % returns to PreTrial
+    'OutputActions', {}); 
+sma = AddState(sma, 'Name', 'Stimulus', ... % Tone
+    'Timer', S.GUI.SoundDuration, ...
+    'StateChangeConditions', {'Tup', 'Dead'}, ...
+    'OutputActions', {'SoftCode', Stimulus});  
+sma = AddState(sma, 'Name', 'Dead', ... % 100ms dead period
+    'Timer', .1, ...
+    'StateChangeConditions', {'Tup', 'WaitForLick'}, ...
+    'OutputActions', {}); 
+sma = AddState(sma, 'Name', 'WaitForLick', ... % Response period
+    'Timer', 2, ... 
+    'StateChangeConditions', {'Port1In', INResponse, 'Tup', NOResponse},... % If lick, then open valve to reward. If no lick, miss period
+    'OutputActions', {}); 
+sma = AddState(sma, 'Name', 'OpenValve', ... % Open valve for reward
+    'Timer', ValveTime,...
+    'StateChangeConditions', {'Tup', 'Drinking'},...
+    'OutputActions', {'ValveState', 1}); 
+sma = AddState(sma, 'Name', 'Drinking', ... % 4 seconds for drinking
+    'Timer', 4,...
+    'StateChangeConditions', {'Tup', 'ITI'},...
+    'OutputActions', {}); 
+sma = AddState(sma, 'Name', 'Miss', ... % 2 second time out for miss
+    'Timer', 2,...
+    'StateChangeConditions', {'Tup', 'exit'}, ...
+    'OutputActions', {}); 
+sma = AddState(sma, 'Name', 'CorrectReject', ... % 2 second correct reject state
+    'Timer', 2,...
+    'StateChangeConditions', {'Tup', 'ITI'}, ...
+    'OutputActions', {}); 
+sma = AddState(sma, 'Name', 'Punish', ... % 7 second punish state
+    'Timer', 7,...
+    'StateChangeConditions', {'Tup', 'ITI'}, ...
+    'OutputActions', {}); 
+sma = AddState(sma, 'Name', 'NeutralIn', ... % 2 second time out for miss
+    'Timer', 2,...
+    'StateChangeConditions', {'Tup', 'exit'}, ...
+    'OutputActions', {}); 
+sma = AddState(sma, 'Name', 'NeutralOut', ... % 2 second time out for miss
+    'Timer', 2,...
+    'StateChangeConditions', {'Tup', 'exit'}, ...
+    'OutputActions', {}); 
+sma = AddState(sma, 'Name', 'ITI', ... % Tup Action
+    'Timer', 0,...
+    'StateChangeConditions', {'Tup', 'exit'},... % exits trial
+    'OutputActions', {}); 
 
 function UpdateOutcomePlot(TrialTypes, Data)
 global BpodSystem
