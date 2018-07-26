@@ -11,18 +11,18 @@ b = categorical({'Hits','Miss', 'FA'}); c = reordercats(b, {'Hits', 'Miss', 'FA'
 hit = 0; miss = 0; fa =0; % initalizes numbers of hits, miss, cr, fa to 0
 z = [0 0 0];
 LickGraph = bar(gca,c , z); title('Lick Tracker'); xlabel('Outcome'); ylabel('Number of Licks'); ylim([0 800]); yticks(0:50:800) % Performance figure
-numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom');
-numMiss = text(2,z(2), num2str(miss), 'HorizontalAlignment','center','VerticalAlignment','bottom');
-numFA = text(3,z(3), num2str(fa), 'HorizontalAlignment','center','VerticalAlignment','bottom');
+numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom'); % initalizes num of hits
+numMiss = text(2,z(2), num2str(miss), 'HorizontalAlignment','center','VerticalAlignment','bottom'); % initializes num of misses
+numFA = text(3,z(3), num2str(fa), 'HorizontalAlignment','center','VerticalAlignment','bottom'); % initializes num of false alarms
 
 %% Define trials
 MaxTrials = 1000; % Max Trials
-randomize = RandStream('mlfg6331_64');
-StopForLick = [];
-for i = 1:48 % 25 groups of 20 trials, each 20 trials is balanced
+randomize = RandStream('mlfg6331_64'); % creates random stream for data sampling later
+StopForLick = []; % initalizes empty array 
+for i = 1:48 % 48 groups of 21 trials, each 21 trials is balanced with 3 different lengths of time for the stop for lick phase
     StopForLick(i,:) = datasample(randomize, [1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3 1 2 3],21,'Replace',false);
 end
-StopForLick = StopForLick';
+StopForLick = StopForLick'; % transposes array for stop for lick
 %% Initialize plots
 TotalRewardDisplay('init2'); % Initialize reward display for lever press
 %% Main trial loop
@@ -80,21 +80,20 @@ for currentTrial = 1:MaxTrials
         TotalRewardDisplay('presses');
     end
     if ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.StopForLick) % hit
-        fa = fa+1; % updates number of hits in probe
-        z=[z(1) z(2) fa]; % change percentage difference between hit and miss
+        fa = fa+1; % updates number of false alarms in probe
+        z=[z(1) z(2) fa]; % updates number
         set(LickGraph, 'YData', z); % Updates probe performance plot  
         figure(lick); delete(numFA); numFA = text(3,z(3), num2str(fa), 'vert', 'bottom', 'horiz', 'center');
     elseif ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Drinking) % hit
         hit = hit+1; % updates number of hits in probe
-        z=[hit z(2) z(3)]; % change percentage difference between hit and miss
+        z=[hit z(2) z(3)]; % updates number
         set(LickGraph, 'YData', z); % Updates probe performance plot
         figure(lick); delete(numHit);numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom');
     elseif ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Miss) % hit
-        miss = miss+1; % updates number of hits in probe
-        z=[z(1) miss z(3)]; % change percentage difference between hit and miss
+        miss = miss+1; % updates number of misses in probe
+        z=[z(1) miss z(3)]; % updates number
         set(LickGraph, 'YData', z); % Updates probe performance plot  
         figure(lick); delete(numMiss);numMiss = text(2,z(2), num2str(miss), 'vert', 'bottom', 'horiz', 'center');
     end
-    
 end
 end
