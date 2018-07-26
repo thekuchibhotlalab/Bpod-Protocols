@@ -14,23 +14,20 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUIPanels.Sound = {'SinWaveFreqGo', 'SinWaveFreqNoGo', 'SoundDuration'};
 end
 %% Define trials
-MaxTrials = 500; 
-n = 30; % first n trials are GO (Type 1)
-% probe1= [81 100];
-% probe2 = [81 100];
+MaxTrials = 1000; 
+n = 10; % first n trials are GO (Type 1)
+probe1= [81 100];
 S.context = ones(MaxTrials, 1); %1 = reinforced context, licktube in
 % S.context(probe1(1):probe1(2)) = 0; % 0 = probe context, licktube out
-% S.context(probe2(1):probe2(2)) = 0; % probe trials
-randomize = RandStream('mlfg6331_64');
-TrialTypes = []; 
+randomize = RandStream('mlfg6331_64'); % generates random stream of numbers for data sampling later
+TrialTypes = []; % initalizes empty array of trial trypes
 for i = 1:25 % 25 groups of 20 trials, each 20 trials is balanced
     TrialTypes(i,:) = datasample(randomize, [1 1 1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],20,'Replace',false);
 end
-% TrialTypes = reshape(TrialTypes, [20, 25]); % array of 500 balanced trials
-TrialTypes = TrialTypes';
+TrialTypes = TrialTypes'; % transpose array of trial types
 TrialTypes(1:n) = 1; % overwrites first n trials
-% TrialTypes(probe1(1):probe1(1)+1) = 1; % first 2 trials of probe are GO
-% TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],18,'Replace',false); % balances remaining 18 trials of probe
+TrialTypes(probe1(1):probe1(1)+1) = 1; % first 2 trials of probe are GO
+TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],18,'Replace',false); % balances remaining 18 trials of probe
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 tic; % starts timer
 
@@ -44,38 +41,22 @@ BpodParameterGUI('init', S); % Initialize parameter GUI plugin--Creates a user i
 % Initialize performance graph
 figure('Name','OutcomesGraph','NumberTitle','off', 'Position', [1250 100 500 600]); % open appropriate figure
 b = categorical({'Hits','Miss','CR', 'FA'}); c = reordercats(b, {'Hits', 'Miss', 'CR', 'FA'}); % set x-axis
-subplot(2,2,1); % graph 1
+subplot(2,1,1); % graph 1
 hit = 0; miss = 0; cr = 0; fa =0; % initalizes numbers of hits, miss, cr, fa to 0
 z = [0 0 0 0]; % initiates array of graph
 OutcomesGraph = bar(gca,c , z); title('Reinforcement (Lever)'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % Performance figure
-numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,1);
-numMiss = text(2,z(2), num2str(miss), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,1);
-numCR = text(3,z(3), num2str(cr), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,1);
-numFA = text(4,z(4), num2str(fa), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,1);
-subplot(2, 2, 2); % graph 2
+numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
+numMiss = text(2,z(2), num2str(miss), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
+numCR = text(3,z(3), num2str(cr), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
+numFA = text(4,z(4), num2str(fa), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
+subplot(2, 1, 2); % graph 2
 hit2 = 0; miss2 = 0; cr2 = 0; fa2 =0; % initializes numbers of hits, miss, cr, fa in probe to 0
 z2 = [0 0 0 0]; % initiates array of graph
 ProbeGraph = bar(gca, c, z2); title('Probe (Lever)'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % performance in probe
-numHit2 = text(1:length(c(1)),z2(1),num2str(hit2),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 2, 2);
-numMiss2 = text(2,z2(2), num2str(miss2), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 2, 2);
-numCR2 = text(3, z2(3),num2str(cr2),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 2, 2);
-numFA2 = text(4,z2(4), num2str(fa2), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 2, 2);
-% subplot(223); % graph 3
-% hit3 = 0; miss3 = 0; cr3 = 0; fa3 = 0; % initializes numbers of hits, miss, cr, fa, in reinforcement for licks to 0
-% z3 = [0 0 0 0]; % initiates array of graph
-% OutcomesGraph2 = bar(gca, c,z3); title('Reinforcement (Licks)'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % lick in reinforcement
-% numHit3 = text(1:length(c(1)),z3(1),num2str(hit3),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,3);
-% numMiss3 = text(2,z3(2), num2str(miss3), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,3);
-% numCR3 = text(3,z3(3), num2str(cr3), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,3);
-% numFA3 = text(4,z3(4), num2str(fa3), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,3);
-% subplot(224);
-% hit4 = 0; miss4 = 0; cr4 = 0; fa4 = 0; % initializes numbers of hits, miss, cr, fa, in reinforcement for licks to 0
-% z4 = [0 0 0 0]; % initiates array of graph
-% ProbeGraph2 = bar(gca, c,z4); title('Probe (Licks)'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % lick in reinforcement
-% numHit4 = text(1:length(c(1)),z4(1),num2str(hit4),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,4);
-% numMiss4 = text(2,z4(2), num2str(miss4), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,4);
-% numCR4 = text(3,z4(3), num2str(cr4), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,4);
-% numFA4 = text(4,z4(4), num2str(fa4), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,2,4);
+numHit2 = text(1:length(c(1)),z2(1),num2str(hit2),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
+numMiss2 = text(2,z2(2), num2str(miss2), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
+numCR2 = text(3, z2(3),num2str(cr2),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
+numFA2 = text(4,z2(4), num2str(fa2), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
 %% Define stimuli and send to sound server
 S.SF = 192000; % Sound card sampling rate
 % Program sound server
@@ -141,57 +122,14 @@ for currentTrial = 1:MaxTrials
         set(OutcomesGraph, 'YData', z); % Update reinforcement performance plot       
     end
     % Update numbers of hit, misses, cr, and false alarms above each bin in performance graphs (deletes previous, updates number in specific plot)    
-    delete(numHit2); subplot(222); numHit2 = text(1:length(c(1)),z2(1),num2str(hit2),'vert','bottom','horiz','center'); 
-    delete(numMiss2);subplot(222); numMiss2 = text(2,z2(2), num2str(miss2), 'vert', 'bottom', 'horiz', 'center');
-    delete(numCR2);subplot(222);numCR2 = text(3,z2(3), num2str(cr2), 'vert', 'bottom', 'horiz', 'center');
-    delete(numFA2);subplot(222);numFA2 = text(4,z2(4), num2str(fa2), 'vert', 'bottom', 'horiz', 'center');
-    delete(numHit);subplot(221);numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom');
-    delete(numMiss);subplot(221);numMiss = text(2,z(2), num2str(miss), 'vert', 'bottom', 'horiz', 'center');
-    delete(numCR);subplot(221);numCR = text(3,z(3), num2str(cr), 'vert', 'bottom', 'horiz', 'center');
-    delete(numFA);subplot(221);numFA = text(4,z(4), num2str(fa), 'vert', 'bottom', 'horiz', 'center');
-%     % Updates lick performance graphs
-%     if S.context(currentTrial) == 0 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Lick) % hit
-%         hit3 = hit3+1; % updates number of hits in lick reinforcement
-%         z3=[((hit3/(hit3+miss3))*100) ((miss3/(hit3+miss3))*100) z3(3) z3(4)]; % change percentage difference between hit and miss
-%         set(OutcomesGraph2, 'YData', z3); % Updates performance plot
-%     elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 1 % go
-%         miss3 = miss3 +1; % update num of misses in lick reinforcement
-%         z3=[((hit3/(hit3+miss3))*100) ((miss3/(hit3+miss3))*100) z3(3) z3(4)]; % change percentage difference between hit and miss
-%         set(OutcomesGraph2, 'YData', z3); % Update performance plot
-%     elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 2 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NoLick) % If no-go and correct reject
-%         cr3 = cr3 +1; % update num of correct rejects in lick reinforcement
-%         z3 = [z3(1) z3(2) ((cr3/(cr3+fa3))*100) ((fa3/(fa3+cr3))*100)]; % change percentage difference between false alarm and correct rejects
-%         set(OutcomesGraph2, 'YData', z3); % Update performance plot
-%     elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 2 % no go
-%         fa3 = fa3+1; % update num of false alarms in lick reinforcement
-%         z3 = [z3(1) z3(2) ((cr3/(cr3+fa3))*100) ((fa3/(fa3+cr3))*100)]; % change percentage difference between false alarm and correct rejects
-%         set(OutcomesGraph2, 'YData', z3); % Update performance plot
-%     elseif S.context(currentTrial) == 0 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.Lick) % hit
-%         hit4 = hit4+1; % updates number of hits in lick probe
-%         z4=[((hit4/(hit4+miss4))*100) ((miss4/(hit4+miss4))*100) z4(3) z4(4)]; % change percentage difference between hit and miss
-%         set(ProbeGraph2, 'YData', z4); % Updates performance plot
-%     elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 1 % go
-%         miss4 = miss4 +1; % update num of misses in lick probe
-%         z4=[((hit4/(hit4+miss4))*100) ((miss4/(hit4+miss4))*100) z4(3) z4(4)]; % change percentage difference between hit and miss
-%         set(ProbeGraph2, 'YData', z4); % Update performance plot
-%     elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 2 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.NoLick) % If no-go and correct reject
-%         cr4 = cr4 +1; % update num of correct rejects in lick probe
-%         z4 = [z4(1) z4(2) ((cr4/(cr4+fa4))*100) ((fa4/(fa4+cr4))*100)]; % change percentage difference between false alarm and correct rejects
-%         set(ProbeGraph2, 'YData', z4); % Update performance plot
-%     elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 2 % no go
-%         fa4 = fa4+1; % update num of false alarms in lick probe
-%         z4 = [z4(1) z4(2) ((cr4/(cr4+fa4))*100) ((fa4/(fa4+cr4))*100)]; % change percentage difference between false alarm and correct rejects
-%         set(ProbeGraph2, 'YData', z4); % Update performance plot        
-%     end
-%     % Update numbers of hit, misses, cr, and false alarms above each bin in performance graphs (deletes previous, updates number in specific plot)    
-%     delete(numHit3); subplot(223); numHit3 = text(1:length(c(1)),z3(1),num2str(hit3),'vert','bottom','horiz','center'); 
-%     delete(numMiss3);subplot(223); numMiss3 = text(2,z3(2), num2str(miss3), 'vert', 'bottom', 'horiz', 'center');
-%     delete(numCR3);subplot(223);numCR3 = text(3,z3(3), num2str(cr3), 'vert', 'bottom', 'horiz', 'center');
-%     delete(numFA3);subplot(223);numFA3 = text(4,z3(4), num2str(fa3), 'vert', 'bottom', 'horiz', 'center');
-%     delete(numHit4); subplot(224); numHit4 = text(1:length(c(1)),z4(1),num2str(hit4),'vert','bottom','horiz','center'); 
-%     delete(numMiss4);subplot(224); numMiss4 = text(2,z4(2), num2str(miss4), 'vert', 'bottom', 'horiz', 'center');
-%     delete(numCR4);subplot(224);numCR4 = text(3,z4(3), num2str(cr4), 'vert', 'bottom', 'horiz', 'center');
-%     delete(numFA4);subplot(224);numFA4 = text(4,z4(4), num2str(fa4), 'vert', 'bottom', 'horiz', 'center');
+    delete(numHit2); subplot(212); numHit2 = text(1:length(c(1)),z2(1),num2str(hit2),'vert','bottom','horiz','center'); 
+    delete(numMiss2);subplot(212); numMiss2 = text(2,z2(2), num2str(miss2), 'vert', 'bottom', 'horiz', 'center');
+    delete(numCR2);subplot(212);numCR2 = text(3,z2(3), num2str(cr2), 'vert', 'bottom', 'horiz', 'center');
+    delete(numFA2);subplot(212);numFA2 = text(4,z2(4), num2str(fa2), 'vert', 'bottom', 'horiz', 'center');
+    delete(numHit);subplot(211);numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom');
+    delete(numMiss);subplot(211);numMiss = text(2,z(2), num2str(miss), 'vert', 'bottom', 'horiz', 'center');
+    delete(numCR);subplot(211);numCR = text(3,z(3), num2str(cr), 'vert', 'bottom', 'horiz', 'center');
+    delete(numFA);subplot(211);numFA = text(4,z(4), num2str(fa), 'vert', 'bottom', 'horiz', 'center');
 end
 function [sma, S] = PrepareStateMachine(S, TrialTypes, currentTrial, ~)
 sma = NewStateMatrix(); % Assemble state matrix
@@ -208,14 +146,10 @@ switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
         Stimulus = 1; % GoTone
         INResponse = 'OpenValve';
         NOResponse = 'Miss';
-        Lick = 'Lick';
-        NoLick = 'NoLick';
     case 2 % NO GO Trial
         Stimulus = 2; % NoGoTone 
         INResponse = 'Punish';
         NOResponse = 'CorrectReject';
-        Lick = 'Lick';
-        NoLick = 'NoLick';
 end
    
 if S.context(currentTrial) == 1 % Reinforced context 
@@ -247,14 +181,6 @@ if S.context(currentTrial) == 1 % Reinforced context
         'Timer', ValveTime,...
         'StateChangeConditions', {'Tup','Drinking'},...
         'OutputActions', {'ValveState', 1});           
-%     sma = AddState(sma, 'Name', 'NoLick', ... 
-%         'Timer', 0, ...
-%         'StateChangeConditions', {'Tup', NOResponse}, ...
-%         'OutputActions', {'PWM2', 255});
-%     sma = AddState(sma, 'Name', 'Lick', ...
-%         'Timer', 0, ...
-%         'StateChangeConditions', {'Tup', 'WaitForPress'}, ...
-%         'OutputActions', {'PWM2', 255});
     sma = AddState(sma, 'Name', 'Drinking', ... % 4 seconds for drinking
         'Timer', 4,...
         'StateChangeConditions', {'Tup', 'CheckLever'},...
@@ -352,4 +278,4 @@ for x = 1:Data.nTrials
         Outcomes(x) = 0; % red X for false alarm
     end
 end
-TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'update',Data.nTrials+1,TrialTypes,Outcomes);  
+TrialTypeOutcomePlot(BpodSystem.GUIHandles.OutcomePlot,'update',Data.nTrials+1,TrialTypes,Outcomes);  % updates trial type outcome tracker
