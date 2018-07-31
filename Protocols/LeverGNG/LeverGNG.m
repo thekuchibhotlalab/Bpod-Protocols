@@ -18,7 +18,7 @@ MaxTrials = 1000;
 n = 10; % first n trials are GO (Type 1)
 probe1= [81 100];
 S.context = ones(MaxTrials, 1); %1 = reinforced context, licktube in
-% S.context(probe1(1):probe1(2)) = 0; % 0 = probe context, licktube out
+S.context(probe1(1):probe1(2)) = 0; % 0 = probe context, licktube out
 randomize = RandStream('mlfg6331_64'); % generates random stream of numbers for data sampling later
 TrialTypes = []; % initalizes empty array of trial trypes
 for i = 1:25 % 25 groups of 20 trials, each 20 trials is balanced
@@ -27,7 +27,7 @@ end
 TrialTypes = TrialTypes'; % transpose array of trial types
 TrialTypes(1:n) = 1; % overwrites first n trials
 TrialTypes(probe1(1):probe1(1)+1) = 1; % first 2 trials of probe are GO
-TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [1 1 1 1 1 1 1 1 2 2 2 2 2 2 2 2 2 2],18,'Replace',false); % balances remaining 18 trials of probe
+TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4],18,'Replace',false); % balances remaining 18 trials of probe
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 tic; % starts timer
 
@@ -92,15 +92,15 @@ for currentTrial = 1:MaxTrials
         hit2 = hit2+1; % updates number of hits in probe
         z2=[((hit2/(hit2+miss2))*100) ((miss2/(hit2+miss2))*100) z2(3) z2(4)]; % change percentage difference between hit and miss
         set(ProbeGraph, 'YData', z2); % Updates probe performance plot
-    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 1 % go
+    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 3 % go
         miss2 = miss2 +1; % update num of misses in probe
         z2=[((hit2/(hit2+miss2))*100) ((miss2/(hit2+miss2))*100) z2(3) z2(4)]; % change percentage difference between hit and miss
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
-    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 2 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.CorrectReject) % If no-go and correct reject
+    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.CorrectReject) % If no-go and correct reject
         cr2 = cr2 +1; % update num of correct rejects
         z2 = [z2(1) z2(2) ((cr2/(cr2+fa2))*100) ((fa2/(fa2+cr2))*100)]; % change percentage difference between false alarm and correct rejects
         set(ProbeGraph, 'YData', z2); % Update performance plot
-    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 2 % no go
+    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 4 % no go
         fa2 = fa2+1; % update num of false alarms
         z2 = [z2(1) z2(2) ((cr2/(cr2+fa2))*100) ((fa2/(fa2+cr2))*100)]; % change percentage difference between false alarm and correct rejects
         set(ProbeGraph, 'YData', z2); % Update performance plot
@@ -150,6 +150,14 @@ switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
         Stimulus = 2; % NoGoTone 
         INResponse = 'Punish';
         NOResponse = 'CorrectReject';
+    case 3 % Probe-GO trial
+        Stimulus = 1; % GoTone
+        INResponse = 'OpenValve';
+        NOResponse = 'Miss';
+    case 4 % Probe-No-Go trial  
+        Stimulus = 2; % NoGoTone
+        INResponse = 'Punish';
+        NOResponse = 'CorrectReject'; 
 end
    
 if S.context(currentTrial) == 1 % Reinforced context 
