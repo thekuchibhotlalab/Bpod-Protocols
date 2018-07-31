@@ -1,6 +1,7 @@
 function LickingGNG_AmplitudeChange
 global BpodSystem
 global probe1
+global Amount
 %% Create trial manager object
 TrialManager = TrialManagerObject;
 %% Define parameters
@@ -13,6 +14,8 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUIPanels.Sound = {'SinWaveFreqGo', 'SinWaveFreqNoGo', 'SoundDuration'}; % Labels for sound panel
     S.GUI.Amplitude = 0.5;
 end
+Amount = S.GUI.RewardAmount;
+
 %% Define trials
 MaxTrials = 1000; % max trials
 n = 5; % first n trials are GO (Type 1)

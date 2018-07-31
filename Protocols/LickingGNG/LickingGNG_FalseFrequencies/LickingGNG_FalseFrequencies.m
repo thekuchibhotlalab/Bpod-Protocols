@@ -1,5 +1,6 @@
 function LickingGNG_FalseFrequencies
 global BpodSystem
+global Amount
 %% Create trial manager object
 TrialManager = TrialManagerObject;
 %% Octaves by 1/8 spacing for reference
@@ -16,6 +17,8 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SinWaveFreqMiddle = 6169; % 3/8 octave from 4756 (halfway between our go and no-go)
     S.GUIPanels.Sound = {'SinWaveFreqGo', 'SinWaveFreqNoGo', 'SoundDuration'}; % Labels for sound panel
 end
+Amount = S.GUI.RewardAmount;
+
 %% Define trials
 MaxTrials = 1000; % max trials
 n = 5; % first n trials are GO (Type 1)

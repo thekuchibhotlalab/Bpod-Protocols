@@ -1,8 +1,10 @@
 function LickingGNG_Normal
 global BpodSystem
+global Amount
 %% WHEN NOT USING PROBE, COMMENT OUT LINES 18, 21, 29, 30
 %% Create trial manager object
 TrialManager = TrialManagerObject;
+
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
@@ -12,6 +14,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SinWaveFreqNoGo = 8000; % Frequency of no-go cue
     S.GUIPanels.Sound = {'SinWaveFreqGo', 'SinWaveFreqNoGo', 'SoundDuration'}; % Labels for sound panel
 end
+Amount = S.GUI.RewardAmount;
 %% Define trials
 MaxTrials = 1000; % max trials
 n = 5; % first n trials are GO (Type 1) 

@@ -1,6 +1,7 @@
 function LeverGNG
 global BpodSystem
 global probe1
+global Amount
 %% Create trial manager object
 TrialManager = TrialManagerObject;
 %% Define parameters
@@ -13,6 +14,8 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.SinWaveFreqNoGo = 8000; % Frequency of no-go cue
     S.GUIPanels.Sound = {'SinWaveFreqGo', 'SinWaveFreqNoGo', 'SoundDuration'};
 end
+Amount = S.GUI.RewardAmount;
+
 %% Define trials
 MaxTrials = 1000; 
 n = 10; % first n trials are GO (Type 1)

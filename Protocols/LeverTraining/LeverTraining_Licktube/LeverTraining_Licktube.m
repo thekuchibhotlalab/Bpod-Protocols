@@ -1,5 +1,6 @@
 function LeverTraining_Licktube
 global BpodSystem
+global Amount
 %% Create trial manager object
 TrialManager = TrialManagerObject;
 %% Define parameters
@@ -7,6 +8,8 @@ S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into c
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.RewardAmount = 5.0; % ul
 end
+Amount = S.GUI.RewardAmount;
+
 % Initialize performance graph
 lick = figure('Name','Lick Tracker','NumberTitle','off', 'Position', [10 500 500 600]); % open appropriate figure
 b = categorical({'Hits','Miss', 'FA'}); c = reordercats(b, {'Hits', 'Miss', 'FA'}); % set x-axis
