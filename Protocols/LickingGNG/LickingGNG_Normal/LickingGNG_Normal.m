@@ -1,5 +1,6 @@
 function LickingGNG_Normal
 global BpodSystem
+%% WHEN NOT USING PROBE, COMMENT OUT LINES 18, 21, 29, 30
 %% Create trial manager object
 TrialManager = TrialManagerObject;
 %% Define parameters
@@ -13,10 +14,11 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
 end
 %% Define trials
 MaxTrials = 1000; % max trials
-n = 5; % first n trials are GO (Type 1)
-probe1= [81 100]; % Input trials for first probe block
+n = 5; % first n trials are GO (Type 1) 
+probe1= [81 100]; % Input trials for first probe block %% COMMENT WHEN NOT USING PROBE
 S.context = ones(MaxTrials, 1); %1 = reinforced context, licktube in
-S.context(probe1(1):probe1(2)) = 0;% 0 = probe context, licktube out
+% despite having separate trial types still require different contexts on top of that because separate state machine needs to run with licktube out (multiple valves cannot be open at once)
+S.context(probe1(1):probe1(2)) = 0;% 0 = probe context, licktube out %% COMMENT WHEN NOT USING PROBE
 randomize = RandStream('mlfg6331_64'); % creates random stream of numbers for data samplign later
 TrialTypes = []; % initalizes empty array for Trialtypes
 for i = 1:50 % 50 groups of 20 trials, each 20 trials is balanced
@@ -24,8 +26,8 @@ for i = 1:50 % 50 groups of 20 trials, each 20 trials is balanced
 end
 TrialTypes = TrialTypes'; % transposes array for proper formatting
 TrialTypes(1:n) = 1; % overwrites first n trials with specified trial
-TrialTypes(probe1(1):probe1(1)+1) = 3; % first 2 trials of probe are GO
-TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4],18,'Replace',false); % balances remaining 18 trials of probe
+TrialTypes(probe1(1):probe1(1)+1) = 3; % first 2 trials of probe are GO %% COMMENT WHEN NOT USING PROBE
+TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4],18,'Replace',false); % balances remaining 18 trials of probe %% COMMENT WHEN NOT USING PROBE
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 tic; % starts timer
 %% Initialize plots
@@ -89,15 +91,15 @@ for currentTrial = 1:MaxTrials
         hit2 = hit2+1; % updates number of hits in probe
         z2=[((hit2/(hit2+miss2))*100) ((miss2/(hit2+miss2))*100) z2(3) z2(4)]; % change percentage difference between hit and miss
         set(ProbeGraph, 'YData', z2); % Updates probe performance plot
-    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 1 % go
+    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 3 % go
         miss2 = miss2 +1; % update num of misses in probe
         z2=[((hit2/(hit2+miss2))*100) ((miss2/(hit2+miss2))*100) z2(3) z2(4)]; % change percentage difference between hit and miss
         set(ProbeGraph, 'YData', z2); % Update probe performance plot
-    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 2 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.CorrectReject) % If no-go and correct reject
+    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 4 & ~isnan(BpodSystem.Data.RawEvents.Trial{currentTrial}.States.CorrectReject) % If no-go and correct reject
         cr2 = cr2 +1; % update num of correct rejects
         z2 = [z2(1) z2(2) ((cr2/(cr2+fa2))*100) ((fa2/(fa2+cr2))*100)]; % change percentage difference between false alarm and correct rejects
         set(ProbeGraph, 'YData', z2); % Update performance plot
-    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 2 % no go
+    elseif S.context(currentTrial) == 0 & TrialTypes(currentTrial) == 4 % no go
         fa2 = fa2+1; % update num of false alarms
         z2 = [z2(1) z2(2) ((cr2/(cr2+fa2))*100) ((fa2/(fa2+cr2))*100)]; % change percentage difference between false alarm and correct rejects
         set(ProbeGraph, 'YData', z2); % Update performance plot
