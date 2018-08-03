@@ -6,9 +6,9 @@ TrialManager = TrialManagerObject;
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-    S.GUI.RewardAmount = 5.0; % ul
+    S.GUI.RewardAmount = 5; % ul
 end
-Amount = S.GUI.RewardAmount;
+Amount = 3.6;
 
 % Initialize performance graph
 lick = figure('Name','Lick Tracker','NumberTitle','off', 'Position', [10 500 500 600]); % open appropriate figure

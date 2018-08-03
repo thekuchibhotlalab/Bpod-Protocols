@@ -1,27 +1,29 @@
-function LeverGNG
+function LeverGNG_Normal
 global BpodSystem
-global probe1
 global Amount
+%% WHEN NOT USING PROBE, COMMENT OUT LINES 22, 24, 30, 31
 %% Create trial manager object
 TrialManager = TrialManagerObject;
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-    S.GUI.RewardAmount = 5.3; % ul
+    S.GUI.RewardAmount = 5.0; % ul
     S.GUI.SoundDuration = 0.1; % seconds
     S.GUI.ResponseTime = 3; % time allowed to respond
     S.GUI.SinWaveFreqGo = 4756; % Frequency of go cue
     S.GUI.SinWaveFreqNoGo = 8000; % Frequency of no-go cue
+%     S.GUI.ProbeStart = 101;
+%     S.GUI.ProbeEnd = 120;
     S.GUIPanels.Sound = {'SinWaveFreqGo', 'SinWaveFreqNoGo', 'SoundDuration'};
 end
 Amount = S.GUI.RewardAmount;
 
 %% Define trials
 MaxTrials = 1000; 
-n = 10; % first n trials are GO (Type 1)
-probe1= [81 100];
+n = 15; % first n trials are GO (Type 1)
+% probe1= [S.GUI.ProbeStart S.GUI.ProbeEnd];
 S.context = ones(MaxTrials, 1); %1 = reinforced context, licktube in
-S.context(probe1(1):probe1(2)) = 0; % 0 = probe context, licktube out
+% S.context(probe1(1):probe1(2)) = 0; % 0 = probe context, licktube out
 randomize = RandStream('mlfg6331_64'); % generates random stream of numbers for data sampling later
 TrialTypes = []; % initalizes empty array of trial trypes
 for i = 1:25 % 25 groups of 20 trials, each 20 trials is balanced
@@ -29,8 +31,8 @@ for i = 1:25 % 25 groups of 20 trials, each 20 trials is balanced
 end
 TrialTypes = TrialTypes'; % transpose array of trial types
 TrialTypes(1:n) = 1; % overwrites first n trials
-TrialTypes(probe1(1):probe1(1)+1) = 1; % first 2 trials of probe are GO
-TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4],18,'Replace',false); % balances remaining 18 trials of probe
+% TrialTypes(probe1(1):probe1(1)+1) = 1; % first 2 trials of probe are GO
+% TrialTypes((probe1(1)+2):probe1(2)) = datasample(randomize, [3 3 3 3 3 3 3 3 4 4 4 4 4 4 4 4 4 4],18,'Replace',false); % balances remaining 18 trials of probe
 BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
 tic; % starts timer
 
@@ -47,7 +49,7 @@ b = categorical({'Hits','Miss','CR', 'FA'}); c = reordercats(b, {'Hits', 'Miss',
 subplot(2,1,1); % graph 1
 hit = 0; miss = 0; cr = 0; fa =0; % initalizes numbers of hits, miss, cr, fa to 0
 z = [0 0 0 0]; % initiates array of graph
-OutcomesGraph = bar(gca,c , z); title('Reinforcement (Lever)'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % Performance figure
+OutcomesGraph = bar(gca,c , z); title('Reinforcement (Lever)'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); yticks(0:10:110); % Performance figure
 numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
 numMiss = text(2,z(2), num2str(miss), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
 numCR = text(3,z(3), num2str(cr), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1);
@@ -55,7 +57,7 @@ numFA = text(4,z(4), num2str(fa), 'HorizontalAlignment','center','VerticalAlignm
 subplot(2, 1, 2); % graph 2
 hit2 = 0; miss2 = 0; cr2 = 0; fa2 =0; % initializes numbers of hits, miss, cr, fa in probe to 0
 z2 = [0 0 0 0]; % initiates array of graph
-ProbeGraph = bar(gca, c, z2); title('Probe (Lever)'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % performance in probe
+ProbeGraph = bar(gca, c, z2); title('Probe (Lever)'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); yticks(0:10:110); % performance in probe
 numHit2 = text(1:length(c(1)),z2(1),num2str(hit2),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
 numMiss2 = text(2,z2(2), num2str(miss2), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
 numCR2 = text(3, z2(3),num2str(cr2),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2);
@@ -162,7 +164,7 @@ switch TrialTypes(currentTrial) % Determine trial-specific state matrix fields
         INResponse = 'Punish';
         NOResponse = 'CorrectReject'; 
 end
-   
+%% ValveState, 2 keeps licktube OUT   
 if S.context(currentTrial) == 1 % Reinforced context 
     sma = AddState(sma, 'Name', 'PreTrial', ... % PreTrial period, ensuring no action until next trial begins
         'Timer', 2, ...

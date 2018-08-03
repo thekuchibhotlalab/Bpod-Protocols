@@ -43,7 +43,7 @@ b = categorical({'Hits','Miss','CR', 'FA'}); c = reordercats(b, {'Hits', 'Miss',
 subplot(2,1,1); % graph 1
 hit = 0; miss = 0; cr = 0; fa =0; % initalizes numbers of hits, miss, cr, fa to 0
 z = [0 0 0 0]; % initiates array of graph
-OutcomesGraph = bar(gca,c , z); title('Reinforcement'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % Performance figure
+OutcomesGraph = bar(gca,c , z); title('Reinforcement'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); yticks(0:10:110); % Performance figure
 numHit = text(1:length(c(1)),z(1),num2str(hit),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1); % initializes numbers above bar
 numMiss = text(2,z(2), num2str(miss), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1); % initializes numbers above bar
 numCR = text(3,z(3), num2str(cr), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2,1,1); % initializes numbers above bar
@@ -52,7 +52,7 @@ subplot(2, 1, 2); % graph 2
 goIn = 0; goOut = 0; noGoIn = 0; noGoOut =0; middleIn = 0; middleOut = 0; % initializes numbers of ins and outs for false go, nogo and middle tones
 z2 = [0 0 0 0 0 0]; % initiates array of graph
 b = categorical({'GO-In','Go-Out','NoGo-In', 'NoGo-Out', 'MiddleIn', 'MiddleOut'}); c = reordercats(b, {'GO-In','Go-Out','NoGo-In', 'NoGo-Out', 'MiddleIn', 'MiddleOut'}); % set x-axis
-ProbeGraph = bar(gca, c, z2); title('Probe'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); % performance in probe
+ProbeGraph = bar(gca, c, z2); title('Probe'); xlabel('Outcome'); ylabel('% Correct'); ylim([0 110]); yticks(0:10:110); % performance in probe
 numGoIn= text(1:length(c(1)),z2(1),num2str(goIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
 numGoOut = text(2,z2(2), num2str(goOut), 'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar
 numNoGoIn = text(3, z2(3),num2str(noGoIn),'HorizontalAlignment','center','VerticalAlignment','bottom'); subplot(2, 1, 2); % initializes numbers above bar

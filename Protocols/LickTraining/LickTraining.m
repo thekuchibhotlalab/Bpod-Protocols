@@ -4,7 +4,7 @@ global Amount
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-    S.GUI.RewardAmount = 3.5; % ul
+    S.GUI.RewardAmount = 4.5; % ul
 end
 Amount = S.GUI.RewardAmount;
 
